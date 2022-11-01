@@ -1,11 +1,49 @@
 import Image from "next/image";
-import { SearchIcon } from "@heroicons/react/solid";
+import { useState } from "react";
+import { DateRangePicker } from "react-date-range";
+import "react-date-range/dist/styles.css"; // main style file
+import "react-date-range/dist/theme/default.css"; // theme css file
+import { useRouter } from 'next/dist/client/router'
 
-const Header = () => {
+const Header = ({placeholder}) => {
+
+  const [searchInput, setSearchInput] = useState("");
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+  const [noOfGuests, setNoOfGuests] = useState(1)
+  const router = useRouter();
+   
+  const selectionRange = {
+    startDate: startDate,
+    endDate: endDate,
+    key: "selection",
+  };
+  const resetInput = ()=>{
+    setSearchInput('')
+  }
+
+  const handleSelect = (ranges) => {
+    setStartDate(ranges.selection.startDate);
+    setEndDate(ranges.selection.endDate);
+  };
+
+  const search = ()=>{
+      router.push({
+        pathname:'/search',
+         // if u pass all information in url then if u share the url the person would get same search result this we cant do it in the redux or props
+        query:{
+          location: searchInput,
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          noOfGuests,
+        },
+      })
+  }
+
   return (
     <header className="sticky top-0 z-50 grid grid-cols-3 bg-white shadow-md p-5 md:px-10">
       {/* left */}
-      <div className="relative flex items-center h-10 cursor-pointer my-auto">
+      <div onClick={()=> router.push('/')} className="relative flex items-center h-10 cursor-pointer my-auto">
         <Image
           src="/logo.png"
           layout="fill"
@@ -18,7 +56,10 @@ const Header = () => {
       <div className="flex items-center md:border-2 rounded-full py-2 md:shadow-sm">
         <input
           type="text"
-          placeholder="Start Your Search"
+          // placeholder={placeholder? placeholder : "Start Your Search"}
+          placeholder={placeholder || "Start Your Search"}
+          onChange={(e) => setSearchInput(e.target.value)}
+          value={searchInput}
           className="inline pl-5 bg-transparent outline-none flex-grow text-sm text-gray-600 placeholder-gray-400"
         />
         <svg
@@ -37,7 +78,7 @@ const Header = () => {
 
       {/* right */}
       <div className="flex items-center space-x-4 justify-end">
-        <p className="hidden md:inline cursor-pointer" >Become a host</p>
+        <p className="hidden md:inline cursor-pointer">Become a host</p>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -84,6 +125,40 @@ const Header = () => {
           </svg>
         </div>
       </div>
+      {searchInput && (
+        <div className="flex flex-col col-span-3 mx-auto mt-4">
+          <DateRangePicker
+            ranges={[selectionRange]}
+            minDate={new Date()}
+            rangeColors={["#FD5B61"]}
+            onChange={handleSelect}
+          />
+          <div className="flex items-center border-b mb-5 ">
+            <h2 className="text-2xl pl-2 flex-grow font-semibold">
+              Number of Guests
+            </h2>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="w-6 h-6"
+            >
+              <path d="M4.5 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM14.25 8.625a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0zM1.5 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM17.25 19.128l-.001.144a2.25 2.25 0 01-.233.96 10.088 10.088 0 005.06-1.01.75.75 0 00.42-.643 4.875 4.875 0 00-6.957-4.611 8.586 8.586 0 011.71 5.157v.003z" />
+            </svg>
+            <input
+            onChange={(e)=> setNoOfGuests(e.target.value)}
+            value={noOfGuests}
+            min={1}
+              type="number"
+              className="w-12 pl-2 text-xl outline-none text-red-400"
+            />
+          </div>
+          <div className="flex">
+            <button className="flex-grow text-gray-500 button" onClick={resetInput}>Cancel</button>
+            <button onClick={search} className="flex-grow text-red-400 button">Search</button>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
